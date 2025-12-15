@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Взлом - Дешифровка Матрицы (2 минуты)</title>
+    
+    <style>
+        body {
+            font-family: 'Consolas', monospace;
+            background-color: #1a1a2e;
+            color: #00ff00; /* Зеленый "хакерский" текст */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #0f0f1a;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.7);
+            width: 90%;
+            max-width: 650px;
+            border: 2px solid #00ff00;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #00ffff; /* Голубой для заголовков */
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, #1a1a2e, #00ff00, #1a1a2e);
+            margin: 20px 0;
+        }
+
+        /* Прогресс-бар */
+        .progress-area {
+            margin-bottom: 25px;
+        }
+
+        #progressBarContainer {
+            width: 100%;
+            background-color: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #00ff00;
+        }
+
+        #progressBar {
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+            background-color: #00ff00;
+            transition: width 0.4s ease-in-out;
+            font-weight: bold;
+            color: #1a1a2e;
+            font-size: 1.1em;
+            text-shadow: none;
+        }
+
+        /* Общий Таймер */
+        .timer-area {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+        }
+
+        #globalTimer {
+            color: #ffcc00; /* Желтый для времени */
+            font-weight: bold;
+        }
+
+        /* Мини-Игра */
+        .game-area p {
+            font-size: 1.1em;
+            margin: 8px 0;
+        }
+
+        #targetSequence {
+            color: #ff00ff; /* Фиолетовый для цели */
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        #playerInput {
+            color: #ffffff; /* Белый для ввода */
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        #roundTimer {
+            color: #ff6600; /* Оранжевый для времени раунда */
+        }
+
+        .message {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.3em;
+            min-height: 1.3em;
+            margin-top: 15px;
+        }
+
+        /* Сетка Матрицы */
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .matrix-cell {
+            background-color: #3a3a4a;
+            padding: 15px 0;
+            text-align: center;
+            font-size: 28px;
+            border: 2px solid #00ff00;
+            cursor: pointer;
+            transition: background-color 0.1s, box-shadow 0.1s;
+            user-select: none;
+            border-radius: 5px;
+        }
+
+        .matrix-cell:hover {
+            background-color: #5a5a6a;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        .matrix-cell:active {
+            background-color: #00ff00;
+            color: #1a1a2e;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        /* Модальное окно (Финал) */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background-color: #0f0f1a;
+            color: #00ff00;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 1);
+            border: 5px double #00ff00;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { box-shadow: 0 0 30px rgba(0, 255, 0, 0.7); }
+            to { box-shadow: 0 0 50px rgba(0, 255, 0, 1); }
+        }
+
+        .modal-content h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .secret-word {
+            font-size: 1.5em;
+            color: #ff00ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔐 Операция "Включение Вышки"</h1>
+        
+        <div class="timer-area">
+            <h2>Общее Оставшееся Время: <span id="globalTimer">120</span> с</h2>
+        </div>
+        
+        <div class="progress-area">
+            <h2>Прогресс Загрузки</h2>
+            <div id="progressBarContainer">
+                <div id="progressBar" style="width: 0%;">0%</div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="game-area">
+            <h2>🚀 Мини-Игра: Дешифровка Матрицы</h2>
+            <p><strong>Цепочка (Ключ):</strong> <span id="targetSequence">...</span></p>
+            <p>Ввод: <span id="playerInput"></span></p>
+            <p>Время раунда: <span id="roundTimer">8</span> с</p>
+            
+            <div id="matrixGrid" class="matrix-grid">
+                </div>
+
+            <p id="gameMessage" class="message">Нажмите на ячейку для начала</p>
+        </div>
+
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle"></h2>
+            <p id="modalMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Константы и Переменные ---
+            const TOTAL_GAME_TIME = 120; // 2 минуты в секундах
+            
+            // ИЗМЕНЕНИЕ: Время раунда увеличено на 5 секунд (было 3, стало 8)
+            const ROUND_TIME = 8;        
+            
+            const SYMBOLS = ['%', '&', '!', '?', '$', '#', '@', '^'];
+            const GRID_SIZE = 16;        // 4x4
+            const SEQUENCE_LENGTH = 3;   // Длина цепочки (ключа)
+            const WIN_INCREASE = 15;     // Увеличение прогресса за победу
+            const LOSE_DECREASE = 5;     // Уменьшение прогресса за поражение
+
+            let globalTimeLeft = TOTAL_GAME_TIME;
+            let progress = 0; // Прогресс в процентах
+            let targetSequence = []; 
+            let playerInput = [];    
+            let globalTimerInterval;
+            let roundTimerInterval;
+            let isGameRunning = false;
+
+            // --- DOM Элементы ---
+            const globalTimerEl = document.getElementById('globalTimer');
+            const progressBarEl = document.getElementById('progressBar');
+            const targetSequenceEl = document.getElementById('targetSequence');
+            const playerInputEl = document.getElementById('playerInput');
+            const roundTimerEl = document.getElementById('roundTimer');
+            const matrixGridEl = document.getElementById('matrixGrid');
+            const gameMessageEl = document.getElementById('gameMessage');
+            const modalEl = document.getElementById('modal');
+            const modalTitleEl = document.getElementById('modalTitle');
+            const modalMessageEl = document.getElementById('modalMessage');
+
+            // --- Функции Игры ---
+
+            function updateProgress(change) {
+                progress += change;
+                if (progress > 100) progress = 100;
+                if (progress < 0) progress = 0;
+                
+                // Обновление прогресс-бара
+                progressBarEl.style.width = `${progress}%`;
+                progressBarEl.textContent = `${Math.round(progress)}%`;
+
+                if (progress >= 100) {
+                    endGame(true); // Победа
+                }
+            }
+
+            function generateMatrix() {
+                matrixGridEl.innerHTML = '';
+                
+                // 1. Генерируем случайные символы для сетки
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    const randomSymbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                    
+                    const cell = document.createElement('div');
+                    cell.classList.add('matrix-cell');
+                    cell.textContent = randomSymbol;
+                    cell.dataset.symbol = randomSymbol;
+                    cell.addEventListener('click', handleCellClick);
+                    matrixGridEl.appendChild(cell);
+                }
+
+                // 2. Генерируем целевую последовательность (ключ)
+                targetSequence = [];
+                for (let i = 0; i < SEQUENCE_LENGTH; i++) {
+                    // Используем символы из всего массива для сложности
+                    targetSequence.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+                }
+                targetSequenceEl.textContent = targetSequence.join(' - ');
+            }
+
+            function handleCellClick(event) {
+                if (!isGameRunning) return;
+
+                const clickedSymbol = event.target.dataset.symbol;
+                playerInput.push(clickedSymbol);
+                playerInputEl.textContent = playerInput.join(' ');
+                
+                const currentTargetSymbol = targetSequence[playerInput.length - 1];
+
+                if (clickedSymbol !== currentTargetSymbol) {
+                    // Неправильный символ - мгновенный провал
+                    endRound(false, '⛔ Ошибка в последовательности!');
+                    return;
+                }
+
+                if (playerInput.length === SEQUENCE_LENGTH) {
+                    // Цепочка введена полностью и правильно
+                    endRound(true, '✅ Успешная Дешифровка!');
+                }
+            }
+            
+            // --- Управление Таймерами и Раундами ---
+
+            function startGlobalTimer() {
+                if (globalTimerInterval) clearInterval(globalTimerInterval);
+                globalTimerInterval = setInterval(() => {
+                    globalTimeLeft--;
+                    globalTimerEl.textContent = globalTimeLeft;
+
+                    if (globalTimeLeft <= 0) {
+                        clearInterval(globalTimerInterval);
+                        if (progress < 100) {
+                           endGame(false); // Проигрыш по времени
+                        }
+                    }
+                }, 1000);
+            }
+
+            function startRoundTimer() {
+                let roundTimeLeft = ROUND_TIME;
+                roundTimerEl.textContent = roundTimeLeft;
+                
+                if (roundTimerInterval) clearInterval(roundTimerInterval);
+                roundTimerInterval = setInterval(() => {
+                    roundTimeLeft--;
+                    roundTimerEl.textContent = roundTimeLeft;
+
+                    if (roundTimeLeft <= 0) {
+                        endRound(false, '⏱️ Время раунда истекло!');
+                    }
+                }, 1000);
+            }
+            
+            function endRound(isWin, message) {
+                // Если раунд уже закончился (например, по таймауту и клику), игнорируем
+                if (!isGameRunning) return; 
+                clearInterval(roundTimerInterval);
+                
+                gameMessageEl.textContent = message;
+                playerInput = [];
+                playerInputEl.textContent = '';
+                isGameRunning = false; // Блокируем клики до нового раунда
+
+                if (isWin) {
+                    updateProgress(WIN_INCREASE);
+                    gameMessageEl.style.color = '#00ff00';
+                } else {
+                    updateProgress(-LOSE_DECREASE);
+                    gameMessageEl.style.color = '#ff0000';
+                }
+
+                // Если игра еще не закончилась по прогрессу или времени
+                if (globalTimeLeft > 0 && progress < 100) {
+                    // Начинаем новый раунд с небольшой задержкой
+                    setTimeout(newRound, 1500);
+                }
+            }
+
+            function newRound() {
+                if (globalTimeLeft <= 0 || progress >= 100) return;
+
+                gameMessageEl.textContent = 'Взлом активен. Введите Цепочку!';
+                gameMessageEl.style.color = '#00ffff';
+                generateMatrix();
+                startRoundTimer();
+                isGameRunning = true;
+            }
+
+            function endGame(isWin) {
+                clearInterval(globalTimerInterval);
+                clearInterval(roundTimerInterval);
+                isGameRunning = false;
+                
+                modalEl.style.display = 'flex';
+                
+                if (isWin) {
+                    modalTitleEl.textContent = '🥳 Отлично!';
+                    modalMessageEl.innerHTML = 'Вы успешно завершили операцию "Включение Вышки".<br>Передайте Казаху секретное слово - <span class="secret-word">Мышка</span>';
+                } else {
+                    modalTitleEl.textContent = '😞 Взлом Провален';
+                    modalMessageEl.textContent = 'Время вышло или прогресс слишком низок. Перезагрузите страницу, чтобы попробовать снова.';
+                }
+            }
+
+            // --- Инициализация ---
+            updateProgress(0); // Инициализация прогресса
+            startGlobalTimer();
+            newRound();
+        });
+    </script>
+</body>
+</html>
